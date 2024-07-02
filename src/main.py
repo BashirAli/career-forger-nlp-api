@@ -1,51 +1,45 @@
 import json
-from contextlib import asynccontextmanager
-from datetime import datetime
-from typing import AsyncGenerator
 import pendulum
-
+from contextlib import asynccontextmanager
+from core.api import build_hello_world
+from datetime import datetime
 from fastapi import FastAPI, Request, status, Response, Depends
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from gcp.secret import SecretManager
+from typing import AsyncGenerator
 
 from configuration.env import settings
-from gcp.pubsub import PubSubPublisher
-from gcp.secret import SecretManager
-from core.api import build_hello_world
 from configuration.logger_config import logger_config
-from service.logger import CustomLoggerAdapter, configure_logger
-from service import dependencies
-from helper.utils import decode_pubsub_message_data, extract_trace_and_request_type, format_pydantic_validation_error_message, create_pydantic_validation_error_message
 from error.custom_exceptions import (
     ManualDLQError,
     InternalAPIException,
     PubsubPublishException,
     PubsubReprocessError,
-    DatastoreGenericError,
-    DatastoreNotFoundException,
     ModelValidationError,
-    DatastoreMultiResultException,
     InternalAPIException
 )
+from core.cf_text_processor import CareerForgerTextProcessor
+from core.nlp_analysis import NLP_Analyser
+from gcp.pubsub import PubSubPublisher
+from helper.utils import decode_pubsub_message_data, extract_trace_and_request_type, \
+    format_pydantic_validation_error_message, create_pydantic_validation_error_message
 from pydantic_model.api_model import (
     Message,
     StatusLog,
     ErrorResponse,
-    LogStatus,
-    GCPTemplateResponse,
-    GCPTemplateRequest
+    LogStatus
 )
+from service import dependencies
+from service.logger import CustomLoggerAdapter, configure_logger
 
 logger = CustomLoggerAdapter(configure_logger(), None)
 
-
+nlp_analyser = NLP_Analyser()
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    if settings.is_test_env:
-        keys = ""
-    else:
-        sm_client = SecretManager()
-        keys = sm_client.get_secret(settings.key_secret_id)
+    nlp_analyser.set_nltk_resources()
+    nlp_analyser.load_spacy_model()
     yield
 
 
@@ -70,6 +64,14 @@ def pubsub_subscriber(request: Message, original_request: Request) -> JSONRespon
         ctx_fields=ctx_fields, original_request=original_request
     )
 
+    #TODO
+    cf_nlp_analysis = CareerForgerTextProcessor(nlp_analyser)
+    cf_nlp_analysis.process(request)
+
+
+
+
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
@@ -79,25 +81,6 @@ def pubsub_subscriber(request: Message, original_request: Request) -> JSONRespon
             "acknowledge_timestamp": str(pendulum.now("Europe/London")),
         },
     )
-
-### ### ### ### ### ### Consumer API ### ### ### ### ### ### ### ###
-@app.post("/v1/hello_world")
-def gcp_template_response(
-        request: GCPTemplateRequest,
-        headers: dependencies.HeaderParams = Depends(dependencies.HeaderParams)
-):
-
-    response = build_hello_world(request.data)
-
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content= {
-            "status": "Success",
-            "response": response,
-        },
-    )
-
-
 
 @app.exception_handler(RequestValidationError)
 async def api_validation_exception_handler(
@@ -181,7 +164,6 @@ async def dead_letter_queue_exception_handler(
             message_id=pubsub_message["message_id"],
             status=LogStatus.FAILURE,
             source_bucket_name=pubsub_message["attributes"].get("bucketId", None),
-            destination_bucket_name=None,
             error_stage=exc.error_stage,
             error_desc=exc.error_desc,
             response_status_code="202",
@@ -215,7 +197,6 @@ async def reprocess_message_exception_handler(
             source_bucket_name=exc.original_request["message"]["attributes"].get(
                 "bucketId", None
             ),
-            destination_bucket_name=None,
             error_stage=exc.error_stage,
             error_desc=exc.error_desc,
             response_status_code="500",
@@ -236,42 +217,6 @@ async def validation_exception_handler(request: Request, exc: ModelValidationErr
     logger.error(msg="ModelValidation Error Occurred")
     validation_exception = create_pydantic_validation_error_message(str(exc))
     http_response = ErrorResponse(exception="Request Validation Error Occurred", detail=validation_exception)
-    http_response_dict = http_response.dict(exclude_none=True)
-    logger.info(msg=http_response_dict)
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=http_response_dict
-    )
-
-
-@app.exception_handler(DatastoreGenericError)
-async def validation_exception_handler(request: Request, exc: DatastoreGenericError):
-    logger.error(msg="DatastoreGeneric Error Occurred")
-    http_response = ErrorResponse(exception="Datastore Error", detail=str(exc))
-    http_response_dict = http_response.dict(exclude_none=True)
-    logger.info(msg=http_response_dict)
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=http_response_dict
-    )
-
-
-@app.exception_handler(DatastoreNotFoundException)
-async def validation_exception_handler(request: Request, exc: DatastoreNotFoundException):
-    logger.error(msg="DatastoreNotFound Error Occurred")
-    http_response = ErrorResponse(errorCode="1001", exception="NotFound Error", detail=str(exc))
-    http_response_dict = http_response.dict(exclude_none=True)
-    logger.info(msg=http_response_dict)
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content=http_response_dict
-    )
-
-
-@app.exception_handler(DatastoreMultiResultException)
-async def validation_exception_handler(request: Request, exc: DatastoreMultiResultException):
-    logger.error(msg="DatastoreMultiResult Exception Occurred")
-    http_response = ErrorResponse(errorCode="2001", exception="Multi Search Results Error", detail=str(exc))
     http_response_dict = http_response.dict(exclude_none=True)
     logger.info(msg=http_response_dict)
     return JSONResponse(

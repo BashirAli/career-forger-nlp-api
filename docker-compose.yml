@@ -1,11 +1,11 @@
 version: '3.7'
 services:
-  gcp-cloud-run-template-api-dev:
+  career-forger-nlp-api-dev:
     build:
       context: .
       target: dev
       dockerfile: Dockerfile
-    container_name: gcp-cloud-run-template-api-dev
+    container_name: career-forger-nlp-api-dev
     environment:
       - GCP_PROJECT_ID=dummy-project
       - GOOGLE_APPLICATION_CREDENTIALS=/home/appuser/.config/gcloud/application_default_credentials.json
@@ -16,8 +16,7 @@ services:
       - PYTHONPATH=/home/appuser/src:/home/appuser/tests
       - ENABLE_DOCS=true
       - IS_TEST_ENV=True
-      - TARGET_PROJECT_ID=dummy-project
-      - TARGET_BUCKET=dummy_bucket
+      - NLP_BUCKET=dummy_bucket
     ports:
       - "8003:8000"
     volumes:

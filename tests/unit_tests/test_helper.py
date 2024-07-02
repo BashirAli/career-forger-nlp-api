@@ -140,7 +140,7 @@ def test_read_validate_message_data(mock_decode):
         )
     )
 
-    result = read_validate_message_data(mock_request)
+    result = read_validate_message_data(mock_request, "")
 
     # Assert
     mock_decode.assert_called_with(mock_request.message.data)
@@ -158,7 +158,7 @@ def test_read_validate_message_data_json_error():
     )
 
     with pytest.raises(ManualDLQError):
-        read_validate_message_data(mock_request)
+        read_validate_message_data(mock_request, PubSubMessage)
 
 
 def test_extract_trace_and_request_type():

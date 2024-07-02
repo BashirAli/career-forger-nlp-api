@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gcp-cloud-run-template-api"
+name = "career-forger-nlp-api"
 version = "0.1.0"
 description = ""
 authors = ["your.name <your.name@exmaple.co.uk>"]

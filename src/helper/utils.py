@@ -14,7 +14,7 @@ from configuration.logger_config import logger_config
 from error.custom_exceptions import ManualDLQError, MessageDecodeError, MessageValidationError
 
 from gcp.gcs import GoogleCloudStorage
-from pydantic_model.api_model import GcsToPubsubEvent, ErrorEnum
+from pydantic_model.api_model import ErrorEnum
 from service.logger import CustomLoggerAdapter, configure_logger
 
 logger = CustomLoggerAdapter(configure_logger(), None)
@@ -63,9 +63,9 @@ def decode_pubsub_message_data(data, strict=True) -> str:
         raise MessageDecodeError(f"Pubsub Message Data Decoding error: {ude}")
 
 
-def read_validate_message_data(request):
+def read_validate_message_data(request, pydantic_model):
     try:
-        message_data = GcsToPubsubEvent(
+        message_data = pydantic_model(
             **json.loads(decode_pubsub_message_data(request.message.data))
         )
         logger.info(f"Data Decoded {message_data.model_dump()}")
@@ -94,14 +94,6 @@ def read_validate_message_data(request):
             error_stage=ErrorEnum.MESSAGE_VALIDATION,
         )
 
-
-
-def remove_file_extension(file_extension_string, extension_to_remove=""):
-    if extension_to_remove in file_extension_string:
-        return file_extension_string.replace(f".{extension_to_remove}", "")
-    return file_extension_string
-
-
 def extract_trace_and_request_type(original_request: Request) -> dict:
     ctx_required_fields = {}
     # X-Cloud-Trace-Context is for GCP tracing to work
@@ -115,43 +107,4 @@ def extract_trace_and_request_type(original_request: Request) -> dict:
     ctx_required_fields["requestType"] = original_request.scope["path"]
     return ctx_required_fields
 
-
-def exponential_retry_decorator(ExceptionToCheck, num_retries=4, time_to_wait=5, backoff_factor=1.5, logger=None):
-    """Retry calling the decorated function using an exponential backoff.
-    :param ExceptionToCheck: the exception to check. may be a tuple of
-        exceptions to check
-    :type ExceptionToCheck: Exception or tuple
-    :param num_retries: number of times to try before giving up
-    :type num_retries: int
-    :param time_to_wait: initial delay between retries in milliseconds
-    :type time_to_wait: int
-    :param backoff_factor: backoff_factor multiplier e.g. value of 2 will double the delay
-        each retry
-    :type backoff_factor: int
-    :param logger: logger to use. If None, print
-    :type logger: logging.Logger instance
-    """
-
-    def deco_retry(f):
-
-        @wraps(f)
-        def func_retry(*args, **kwargs):
-            deco_num_retries, deco_time_tow_wait = num_retries, time_to_wait
-            while deco_num_retries > 1:
-                try:
-                    return f(*args, **kwargs)
-                except ExceptionToCheck as e:
-                    msg = "%s, Retrying in %s seconds..." % (str(e), deco_time_tow_wait / 1000)
-                    if logger:
-                        logger.warning(msg)
-                    else:
-                        print(msg)
-                    time.sleep(deco_time_tow_wait / 1000)
-                    deco_num_retries -= 1
-                    deco_time_tow_wait *= backoff_factor
-            return f(*args, **kwargs)
-
-        return func_retry  # true decorator
-
-    return deco_retry
 

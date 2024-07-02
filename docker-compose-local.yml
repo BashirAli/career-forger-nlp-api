@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-  gcp-cloud-run-template-api-local:
+  career-forger-nlp-api-local:
     build:
       context: .
       target: dev
@@ -8,7 +8,7 @@ services:
 #    dns:
 #      - 100.64.0.1 #/etc/resolv.conf
 #      - #IP ADDRESS HERE
-    container_name: gcp-cloud-run-template-api-dev-local
+    container_name: career-forger-nlp-api-dev-local
     environment:
       - GCP_PROJECT_ID=dummy-project
       - GOOGLE_CLOUD_PROJECT=dummy-project
@@ -17,8 +17,7 @@ services:
       - PYTHONPATH=/home/appuser/src:/home/appuser/tests
       - ENABLE_DOCS=true
       - IS_TEST_ENV=True
-      - TARGET_PROJECT_ID=dummy-project
-      - TARGET_BUCKET=dummy_bucket
+      - NLP_BUCKET=dummy_bucket
     ports:
       - "8003:8000"
     volumes:
