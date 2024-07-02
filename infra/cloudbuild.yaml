@@ -1,0 +1,42 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: build
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        docker build . --target dev -t gcp-cloud-run-template-api-dev
+        docker-compose -f docker-compose.yml up -d
+  - name: gcr.io/cloud-builders/docker
+    id: unit-tests
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        docker exec gcp-cloud-run-template-api-dev /bin/sh -c "poetry run pytest /home/appuser/tests/unit_tests/"
+  - name: gcr.io/cloud-builders/docker
+    id: integration-tests
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        docker exec gcp-cloud-run-template-api-dev /bin/sh -c "poetry run pytest /home/appuser/tests/integration_tests/"
+  - name: gcr.io/cloud-builders/docker
+    id: build-prod
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        echo 'export _IMAGE="{$LOCATION}-docker.pkg.dev/${PROJECT_ID}/{$_ARTIFACT_REGISTRY_PATH}"'
+        docker build . --target prod -t $$_IMAGE:latest -t $$_IMAGE:$TAG_NAME --cache-from gcp-cloud-run-template-api-dev
+options:
+  pool:
+    name: 'projects/{$PROJECT_ID}/locations/{$LOCATION}/workerPools/{$_WORKER_POOL}'
+images:
+  - '{$LOCATION}-docker.pkg.dev/${PROJECT_ID}/{$_ARTIFACT_REGISTRY_PATH}:$TAG_NAME'
+  - '{$LOCATION}-docker.pkg.dev/${PROJECT_ID}/{$_ARTIFACT_REGISTRY_PATH}:latest'
+substitutions:
+    _ARTIFACT_REGISTRY_PATH: unset
+    _WORKER_POOL: unset
+    TAG_NAME: unset
+timeout: 21600s
