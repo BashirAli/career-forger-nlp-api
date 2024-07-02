@@ -1,0 +1,10 @@
+FROM python:3.10.5-slim
+
+ENV PYTHONUNBUFFERED True
+ENV STORAGE_BASE /
+ENV STORAGE_DIR storage
+
+COPY requirements.txt ./
+
+RUN pip3 install -r requirements.txt
+EXPOSE 9090

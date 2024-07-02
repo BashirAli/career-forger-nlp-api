@@ -1,0 +1,74 @@
+version: '3.7'
+services:
+  gcp-cloud-run-template-api-dev:
+    build:
+      context: .
+      target: dev
+      dockerfile: Dockerfile
+    container_name: gcp-cloud-run-template-api-dev
+    environment:
+      - GCP_PROJECT_ID=dummy-project
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/appuser/.config/gcloud/application_default_credentials.json
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+      - PUBSUB_PROJECT_ID=dummy-project
+      - STORAGE_EMULATOR_HOST=http://cloud-storage:9090
+      - PORT=8000
+      - PYTHONPATH=/home/appuser/src:/home/appuser/tests
+      - ENABLE_DOCS=true
+      - IS_TEST_ENV=True
+      - TARGET_PROJECT_ID=dummy-project
+      - TARGET_BUCKET=dummy_bucket
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./src:/home/appuser/src
+      - ./tests:/home/appuser/tests
+      - ~/.config/gcloud/application_default_credentials.json:/home/appuser/.config/gcloud/application_default_credentials.json
+    depends_on:
+      pubsub-emulator:
+        condition: service_started
+      cloud-storage:
+        condition: service_started
+      datastore:
+        condition: service_healthy  # Wait until Datastore emulator is up and running
+
+  datastore:
+    image: google/cloud-sdk
+    environment:
+      - GCP_PROJECT_ID=dummy-project
+    command: [ "sh", "-c", "gcloud beta emulators datastore start --project=$$GCP_PROJECT_ID --host-port=0.0.0.0:9000 --consistency=1.0 --no-store-on-disk" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  cloud-storage:
+    build:
+      context: ./tests/integration_tests/google_storage_emulator
+      dockerfile: DockerfileTestPrep
+    container_name: cloud-storage
+    environment:
+      - GCP_PROJECT_ID=dummy-project
+    command: [
+      "sh", "-c",
+      "gcp-storage-emulator start --host=0.0.0.0 --port=9090 --no-store-on-disk --default-bucket=dummy_bucket"
+    ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://0.0.0.0:9090" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    ports:
+      - "9090:9090"
+
+  pubsub-emulator:
+    image: google/cloud-sdk
+    container_name: pubsub-emulator
+    environment:
+      - GCP_PROJECT_ID=dummy-project
+    command: [ "sh", "-c", "gcloud beta emulators pubsub start --project=dummy-project --host-port=0.0.0.0:8085" ]
+    ports:
+      - "8085:8085"
