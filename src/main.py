@@ -1,19 +1,16 @@
 import json
 import pendulum
 from contextlib import asynccontextmanager
-from core.api import build_hello_world
 from datetime import datetime
 from fastapi import FastAPI, Request, status, Response, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from gcp.secret import SecretManager
 from typing import AsyncGenerator
 
 from configuration.env import settings
 from configuration.logger_config import logger_config
 from error.custom_exceptions import (
     ManualDLQError,
-    InternalAPIException,
     PubsubPublishException,
     PubsubReprocessError,
     ModelValidationError,
@@ -30,12 +27,13 @@ from pydantic_model.api_model import (
     ErrorResponse,
     LogStatus
 )
-from service import dependencies
 from service.logger import CustomLoggerAdapter, configure_logger
 
 logger = CustomLoggerAdapter(configure_logger(), None)
 
 nlp_analyser = NLP_Analyser()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     nlp_analyser.set_nltk_resources()
@@ -50,10 +48,9 @@ app = FastAPI(title=settings.api_name, lifespan=lifespan)
 def health_check():
     return {"Status": "OK"}
 
-### ### ### ### ### ### PubSub Subscriber ### ### ### ### ### ### ### ###
+
 @app.post("/")
 def pubsub_subscriber(request: Message, original_request: Request) -> JSONResponse:
-
     # set request contexts
     ctx_fields = extract_trace_and_request_type(original_request=original_request)
     original_request = request.model_dump()
@@ -64,13 +61,8 @@ def pubsub_subscriber(request: Message, original_request: Request) -> JSONRespon
         ctx_fields=ctx_fields, original_request=original_request
     )
 
-    #TODO
     cf_nlp_analysis = CareerForgerTextProcessor(nlp_analyser)
     cf_nlp_analysis.process(request)
-
-
-
-
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -82,9 +74,10 @@ def pubsub_subscriber(request: Message, original_request: Request) -> JSONRespon
         },
     )
 
+
 @app.exception_handler(RequestValidationError)
 async def api_validation_exception_handler(
-    request: Request, exc: RequestValidationError
+        request: Request, exc: RequestValidationError
 ):
     """In the event of an invalid request payload, we want to return a 2xx code to stop the api to retry
     on broken paylaods - so we're sending the data to pubsub"""
@@ -129,7 +122,7 @@ async def api_validation_exception_handler(
 
 @app.exception_handler(ManualDLQError)
 async def dead_letter_queue_exception_handler(
-    request: Request, exc: ManualDLQError
+        request: Request, exc: ManualDLQError
 ):
     """Publishing to DLQ Manually in the event the api fails to do stuff with the request payload -
     instead of retrying/failing over and over"""
@@ -181,12 +174,12 @@ async def dead_letter_queue_exception_handler(
 
 @app.exception_handler(PubsubReprocessError)
 async def reprocess_message_exception_handler(
-    request: Request, exc: PubsubReprocessError
+        request: Request, exc: PubsubReprocessError
 ):
     """Function to handle reprocess error"""
     logger.error(
         msg=f"Unable to process the message due to internal server error - Message "
-        f" will be retried"
+            f" will be retried"
     )
 
     logger.info(
@@ -211,6 +204,7 @@ async def reprocess_message_exception_handler(
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=http_response_dict
     )
+
 
 @app.exception_handler(ModelValidationError)
 async def validation_exception_handler(request: Request, exc: ModelValidationError):

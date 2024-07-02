@@ -9,7 +9,7 @@ class ManualDLQError(Exception):
     """
 
     def __init__(
-        self, original_request: Message, error_desc: str, error_stage: str
+            self, original_request: Message, error_desc: str, error_stage: str
     ):
         self.original_request = original_request
         self.error_desc = error_desc
@@ -35,6 +35,8 @@ class MessageDecodeError(Exception):
     Args:
         Exception ([type]): [description]
     """
+
+
 class MessageValidationError(Exception):
     """Custom Exception for pubsub data validation
 
@@ -42,12 +44,14 @@ class MessageValidationError(Exception):
         Exception ([type]): [description]
     """
 
+
 class PubsubPublishException(Exception):
     """Custom Exception for PubSub Publish Exceptions
 
     Args:
         Exception ([type]): [description]
     """
+
 
 class ModelValidationError(Exception):
     """Custom Exception for Pydantic Model Validation

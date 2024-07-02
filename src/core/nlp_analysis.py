@@ -20,7 +20,8 @@ class NLP_Analyser:
             model_file_path = "../resources/models/en_core_web_lg"
 
         else:
-            # TODO LOAD SPACY MODEL FROM BUCKET
+            # TODO LOAD SPACY MODEL FROM GCS BUCKET
+            # https://stackoverflow.com/questions/65071321/save-and-load-a-spacy-model-to-a-google-cloud-storage-bucket
             model_file_path = ""
             pass
         self.nlp = spacy.load(model_file_path)
