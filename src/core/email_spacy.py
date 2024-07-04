@@ -27,29 +27,25 @@ def preprocess_text(text):
     # Process the text with spaCy to convert it into a Doc object
     doc = nlp(text.lower())
     # Filter out stop words and punctuation from each sentence
-    filtered_sents = []
-    for sent in doc.sents:
-        filtered_tokens = [token.text for token in sent if
-                           not token.is_stop and not token.is_punct and token.text not in stop_words]
-        filtered_sents.append(" ".join(filtered_tokens))
-    return filtered_sents
-
+    return [
+        " ".join(token.text for token in sent if not token.is_stop and not token.is_punct and token.text not in stop_words)
+        for sent in doc.sents
+    ]
 # Step 2: Identify Key Phrases and Relevant Nouns
-def extract_phrases(doc):
+def extract_phrases(sentences):
     phrases = []
-    # Extract noun chunks and named entities from each sentence
-    for sent in doc:
+    # Process each preprocessed sentence
+    for sent in sentences:
         doc_sent = nlp(sent)
         for chunk in doc_sent.noun_chunks:
             # Include the root verb for better context
-            root_verb = [token.lemma_ for token in chunk.root.head.children if token.pos_ == "VERB"]
-            if root_verb:
-                phrases.append(chunk.text + " " + root_verb[0])
-            else:
-                phrases.append(chunk.text)
+            root_verb = next((token.lemma_ for token in chunk.root.head.children if token.pos_ == "VERB"), None)
+            phrase = f"{chunk.text} {root_verb}" if root_verb else chunk.text
+            phrases.append(phrase)
         for ent in doc_sent.ents:
             phrases.append(ent.text)
     return phrases
+
 
 # Step 3: Categorise Phrases/Nouns
 # Define words or phrases for each category
@@ -409,18 +405,18 @@ tags_regex = {tag: re.compile(r".*\b(" + "|".join(map(re.escape, words)) + r")\b
 def tag_phrases(phrases):
     tagged = defaultdict(list)
     for phrase in phrases:
-        for tag, regex in tags_regex.items():
-            if regex.match(phrase):
-                tagged[phrase].append(tag)
+        tags = [tag for tag, regex in tags_regex.items() if regex.match(phrase)]
+        if tags:
+            tagged[phrase].extend(tags)
     return tagged
 
 # Step 5: Return Results
 def get_results(categorised, tagged):
-    results = []
-    for category, phrases in categorised.items():
-        for phrase in phrases:
-            results.append({"phrase": phrase, "category": category, "tags": tagged[phrase]})
-    return results
+    return [
+        {"phrase": phrase, "category": category, "tags": tagged[phrase]}
+        for category, phrases in categorised.items()
+        for phrase in phrases
+    ]
 
 # Process the text
 filtered_sents = preprocess_text(example_text)  # Step 1: Preprocess text

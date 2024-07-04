@@ -4,7 +4,7 @@ from pydantic_model.api_model import EmailInfo
 
 class CareerForgerTextProcessor:
     def __init__(self, nlp_analyser):
-        pass
+        self.nlp_analyser = nlp_analyser
 
     def process(self, message):
         pass

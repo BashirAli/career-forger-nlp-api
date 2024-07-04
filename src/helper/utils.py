@@ -6,7 +6,7 @@ import json
 from typing import Sequence
 from functools import wraps
 import json
-
+import re
 from fastapi import Request
 from pydantic_core import ValidationError
 
@@ -123,3 +123,13 @@ def read_json_file(file_path):
         print(f"Error: The file at path '{file_path}' is not a valid JSON file.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+
+def build_regex(list_of_matches):
+    """
+    Regex which builds a pattern based on the following
+    Match any character -> match any of the words in the provided list -> match any character
+    This allows us to search the text for multiple matches
+    """
+    return {matches: re.compile(r".*\b(" + "|".join(map(re.escape, words)) + r")\b.*", re.IGNORECASE) for
+            matches, words in list_of_matches.items()}

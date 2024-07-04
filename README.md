@@ -128,3 +128,6 @@ docker build -t europe-west2-docker.pkg.dev/prj-vo-aa-s-dss-sandbox/hello-world/
 
 docker push europe-west2-docker.pkg.dev/prj-vo-aa-s-dss-sandbox/hello-world/hello-world:v01
 ```
+
+
+TODO - download spacy model locally when locally testing instuctions 
