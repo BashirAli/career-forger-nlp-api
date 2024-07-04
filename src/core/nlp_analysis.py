@@ -106,45 +106,67 @@ class RegexTagger:
         self.tags = read_json_file(f"{CURRENT_PATH}/../{tags_file}")
 
     def categorise_feedback_phrases(self, extracted_phrases):
-        # TODO improve categories matching in the event its not matched
-        categorised = {"strengths": [], "weaknesses": [], "improvements": []}
+        """
+        Categorize feedback phrases based on predefined regex patterns and sentiment analysis.
+        Args:
+            extracted_phrases (list): List of phrases to categorize.
+        Returns:
+            dict: Dictionary mapping phrases to their categories.
+        """
+        categorised = {}
         categories_regex = build_regex(self.categories)
+
         for phrase in extracted_phrases:
-            matched = False
+            matched_category = None
+
             # Check if the phrase matches any predefined regex patterns for categories
             for category, regex in categories_regex.items():
-                if regex.match(phrase):
-                    categorised[category].append(phrase)
-                    matched = True
+                if regex.search(phrase):
+                    matched_category = category
                     break
-            # If the phrase doesn't match any predefined regex patterns
-            if not matched:
-                # Analyse sentiment using TextBlob polarity
+
+            # If no regex match, analyze sentiment using TextBlob polarity
+            #TODO improve this as sentiment isnt enough
+            if matched_category is None:
                 polarity = TextBlob(phrase).sentiment.polarity
-                # Categorise based on sentiment polarity
                 if polarity > 0:
-                    categorised["strengths"].append(phrase)
+                    matched_category = "strengths"
                 elif polarity < 0:
-                    categorised["weaknesses"].append(phrase)
+                    matched_category = "weaknesses"
                 else:
-                    categorised["improvements"].append(phrase)
+                    matched_category = "improvements"
+
+            # Store the matched category for the phrase
+            categorised[phrase] = matched_category
+
         return categorised
 
-    # Step 4: Tag Phrases/Nouns
     def tag_feedback_phrases(self, extracted_phrases):
-        tagged = defaultdict(list)
+        """
+        Tag feedback phrases based on predefined regex patterns.
+        Args:
+            extracted_phrases (list): List of phrases to tag.
+        Returns:
+            dict: Dictionary mapping phrases to their tags.
+        """
         tags_regex = build_regex(self.tags)
+        # TODO improve this as its not tagging all phrases
 
-        for phrase in extracted_phrases:
-            for tag, regex in tags_regex.items():
-                if regex.match(phrase):
-                    tagged[phrase].append(tag)
-        return tagged
+        return {
+            phrase: [tag for tag, regex in tags_regex.items() if regex.match(phrase)]
+            for phrase in extracted_phrases
+        }
 
-    # # Step 5: Return Results
-    # def get_results(self, categorised, tagged):
-    #     results = []
-    #     for category, phrases in categorised.items():
-    #         for phrase in phrases:
-    #             results.append({"phrase": phrase, "category": category, "tags": tagged[phrase]})
-    #     return results
+    @staticmethod
+    def join_category_and_tags(categorised, tagged):
+        results = []
+
+        for phrase in categorised.keys():
+            result = {
+                'phrase': phrase,
+                'category': categorised[phrase],
+                'tags': tagged.get(phrase, [])
+            }
+            results.append(result)
+
+        return results

@@ -4,6 +4,7 @@ from textblob import TextBlob
 import nltk
 from nltk.corpus import stopwords
 import re
+
 # Download NLTK stop words
 nltk.download('stopwords')
 
@@ -22,15 +23,20 @@ Your involvement in extracurricular activities, such as the coding club and volu
 You showed remarkable leadership during the last project, but there were instances where you could have delegated tasks more efficiently. 
 For career advice, I suggest you keep honing your public speaking skills and seek opportunities for mentorship to further enhance your leadership abilities.
 """
+
+
 # Step 1: Prepare the Text and Remove Stop Words
 def preprocess_text(text):
     # Process the text with spaCy to convert it into a Doc object
     doc = nlp(text.lower())
     # Filter out stop words and punctuation from each sentence
     return [
-        " ".join(token.text for token in sent if not token.is_stop and not token.is_punct and token.text not in stop_words)
+        " ".join(
+            token.text for token in sent if not token.is_stop and not token.is_punct and token.text not in stop_words)
         for sent in doc.sents
     ]
+
+
 # Step 2: Identify Key Phrases and Relevant Nouns
 def extract_phrases(sentences):
     phrases = []
@@ -139,28 +145,37 @@ categories_words = {
 categories_regex = {category: re.compile(r".*\b(" + "|".join(map(re.escape, words)) + r")\b.*", re.IGNORECASE) for
                     category, words in categories_words.items()}
 
+from textblob import TextBlob  # Assuming TextBlob is imported
+
+
 def categorise_phrases(phrases):
-    categorised = {"strengths": [], "weaknesses": [], "improvements": []}
+    categorised = {}
+
     for phrase in phrases:
-        matched = False
+        matched_category = None
+
         # Check if the phrase matches any predefined regex patterns for categories
         for category, regex in categories_regex.items():
-            if regex.match(phrase):
-                categorised[category].append(phrase)
-                matched = True
+            if regex.search(phrase):
+                matched_category = category
                 break
-        # If the phrase doesn't match any predefined regex patterns
-        if not matched:
-            # Analyse sentiment using TextBlob polarity
+
+        # If no regex match, analyze sentiment using TextBlob polarity
+        if matched_category is None:
             polarity = TextBlob(phrase).sentiment.polarity
-            # Categorise based on sentiment polarity
+
             if polarity > 0:
-                categorised["strengths"].append(phrase)
+                matched_category = "strengths"
             elif polarity < 0:
-                categorised["weaknesses"].append(phrase)
+                matched_category = "weaknesses"
             else:
-                categorised["improvements"].append(phrase)
+                matched_category = "improvements"
+
+        # Store the matched category for the phrase
+        categorised[phrase] = matched_category
+
     return categorised
+
 
 # Predefined keyword lists for each tag
 tags_words = {
@@ -401,22 +416,28 @@ tags_words = {
 tags_regex = {tag: re.compile(r".*\b(" + "|".join(map(re.escape, words)) + r")\b.*", re.IGNORECASE)
               for tag, words in tags_words.items()}
 
+
 # Step 4: Tag Phrases/Nouns
 def tag_phrases(phrases):
-    tagged = defaultdict(list)
-    for phrase in phrases:
-        tags = [tag for tag, regex in tags_regex.items() if regex.match(phrase)]
-        if tags:
-            tagged[phrase].extend(tags)
-    return tagged
+    return {
+        phrase: [tag for tag, regex in tags_regex.items() if regex.match(phrase)]
+        for phrase in phrases
+    }
+
 
 # Step 5: Return Results
 def get_results(categorised, tagged):
-    return [
-        {"phrase": phrase, "category": category, "tags": tagged[phrase]}
-        for category, phrases in categorised.items()
-        for phrase in phrases
-    ]
+    results = []
+
+    for phrase in categorised.keys():
+        result = {
+            'phrase': phrase,
+            'category': categorised[phrase],
+            'tags': tagged.get(phrase, [])
+        }
+        results.append(result)
+
+    return results
 
 # Process the text
 filtered_sents = preprocess_text(example_text)  # Step 1: Preprocess text
@@ -429,64 +450,6 @@ tagged = tag_phrases(phrases)  # Step 4: Tag phrases
 print(tagged)
 results = get_results(categorised, tagged)  # Step 5: Get results
 
-# # Output the results
-# for result in results:
-#     print(f"Phrase: {result['phrase']}\nCategory: {result['category']}\nTags: {', '.join(result['tags'])}\n")
-
-
-
-
-
-
-
-
-
-
-
-
-class NLP_Analyser:
-    def __init__(self):
-        self.nlp = None
-        self.stop_words = None
-
-    def set_nltk_resources(self):
-        nltk.download('stopwords')
-        self.stop_words = set(stopwords.words('english'))
-
-    def load_spacy_model(self):
-        if settings.is_test_env:
-            model_file_path = "../../tests/integration_tests/models/en_core_web_lg"
-
-        else:
-            # TODO LOAD SPACY MODEL FROM GCS BUCKET
-            # https://stackoverflow.com/questions/65071321/save-and-load-a-spacy-model-to-a-google-cloud-storage-bucket
-            model_file_path = ""
-        self.nlp = spacy.load(model_file_path)
-
-    def preprocess_raw_text(self, text):
-        # Process the text with spaCy to convert it into a Doc object
-        doc = self.nlp(text.lower())
-        # Filter out stop words and punctuation from each sentence
-        return [
-            " ".join(token.text for token in sent if
-                     not token.is_stop and not token.is_punct and token.text not in self.stop_words)
-            for sent in doc.sents
-        ]
-
-    def extract_relevant_phrases(self, filtered_doc_tokens):
-        # TODO make this more better at extracting phrases
-        extracted_phrases = []
-        # Extract noun chunks and named entities from each sentence
-        for doc_token in filtered_doc_tokens:
-            doc_sent = self.nlp(doc_token)
-            for chunk in doc_sent.noun_chunks:
-                # Include the root verb for better context
-                root_verb = [token.lemma_ for token in chunk.root.head.children if token.pos_ == "VERB"]
-                if root_verb:
-                    extracted_phrases.append(chunk.text + " " + root_verb[0])
-                else:
-                    extracted_phrases.append(chunk.text)
-            for ent in doc_sent.ents:
-                extracted_phrases.append(ent.text)
-        return extracted_phrases
-
+# Output the results
+for result in results:
+    print(f"Phrase: {result['phrase']}\nCategory: {result['category']}\nTags: {', '.join(result['tags'])}\n")

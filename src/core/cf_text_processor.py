@@ -6,7 +6,7 @@ from nlp_analysis import RegexTagger
 class CareerForgerTextProcessor:
     def __init__(self, nlp_analyser):
         self.nlp_analyser = nlp_analyser
-        self.regex_tagger = RegexTagger
+        self.regex_tagger = RegexTagger()
 
     def process(self, message):
         # 1. decode and validate pubsub message
@@ -23,9 +23,12 @@ class CareerForgerTextProcessor:
 
         categorised_phrases = self.regex_tagger.categorise_feedback_phrases(feedback_phrases)
 
-        # 5.  tag with additional info
+        # 5.  tag with additional info and join
         tagged_phrases = self.regex_tagger.categorise_feedback_phrases(feedback_phrases)
 
+        enriched_phrases = self.regex_tagger.join_category_and_tags(categorised_phrases, tagged_phrases)
+
         # 6. redact PII on certain fields (to be listed)
+        redactable_list = ["sender", "recipient", "title"]
 
         # 7. clean and publish output to pubsub/bq sub
