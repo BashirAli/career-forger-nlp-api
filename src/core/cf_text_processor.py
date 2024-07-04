@@ -1,34 +1,31 @@
 from helper.utils import read_validate_message_data
 from pydantic_model.api_model import EmailInfo
+from nlp_analysis import RegexTagger
 
 
 class CareerForgerTextProcessor:
     def __init__(self, nlp_analyser):
         self.nlp_analyser = nlp_analyser
+        self.regex_tagger = RegexTagger
 
     def process(self, message):
-        pass
-
-        #1. decode and validate pubsub message
+        # 1. decode and validate pubsub message
         email_data = read_validate_message_data(message, EmailInfo)
         raw_email_text = email_data["content"]
 
-        #2. preprocess and clean text for NLP (removing stopwords)
+        # 2. preprocess/clean/tokenize sentences for NLP (removing stopwords)
+        preprocessed_text = self.nlp_analyser.preprocess_raw_text(raw_email_text)
 
-        #3. tokenize text
+        # 3. extract phrases from sentences
+        feedback_phrases = self.nlp_analyser.extract_relevant_phrases(preprocessed_text)
 
-        #4. extract phrases
+        # 4. categorise as str/weak/improvements - including categorisation when not matched to regex
 
-        #5. categorise as str/weak/improvements - including categorisation when not matched to regex
+        categorised_phrases = self.regex_tagger.categorise_feedback_phrases(feedback_phrases)
 
-        #6.  tag with additional info
+        # 5.  tag with additional info
+        tagged_phrases = self.regex_tagger.categorise_feedback_phrases(feedback_phrases)
 
-        #7. redact PII on certain fields (to be listed)
+        # 6. redact PII on certain fields (to be listed)
 
-        #8. clean and return output
-
-
-
-
-
-
+        # 7. clean and publish output to pubsub/bq sub

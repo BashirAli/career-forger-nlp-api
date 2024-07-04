@@ -420,11 +420,73 @@ def get_results(categorised, tagged):
 
 # Process the text
 filtered_sents = preprocess_text(example_text)  # Step 1: Preprocess text
+print(filtered_sents)
 phrases = extract_phrases(filtered_sents)  # Step 2: Extract phrases
+print(phrases)
 categorised = categorise_phrases(phrases)  # Step 3: Categorise phrases
+print(categorised)
 tagged = tag_phrases(phrases)  # Step 4: Tag phrases
+print(tagged)
 results = get_results(categorised, tagged)  # Step 5: Get results
 
-# Output the results
-for result in results:
-    print(f"Phrase: {result['phrase']}\nCategory: {result['category']}\nTags: {', '.join(result['tags'])}\n")
+# # Output the results
+# for result in results:
+#     print(f"Phrase: {result['phrase']}\nCategory: {result['category']}\nTags: {', '.join(result['tags'])}\n")
+
+
+
+
+
+
+
+
+
+
+
+
+class NLP_Analyser:
+    def __init__(self):
+        self.nlp = None
+        self.stop_words = None
+
+    def set_nltk_resources(self):
+        nltk.download('stopwords')
+        self.stop_words = set(stopwords.words('english'))
+
+    def load_spacy_model(self):
+        if settings.is_test_env:
+            model_file_path = "../../tests/integration_tests/models/en_core_web_lg"
+
+        else:
+            # TODO LOAD SPACY MODEL FROM GCS BUCKET
+            # https://stackoverflow.com/questions/65071321/save-and-load-a-spacy-model-to-a-google-cloud-storage-bucket
+            model_file_path = ""
+        self.nlp = spacy.load(model_file_path)
+
+    def preprocess_raw_text(self, text):
+        # Process the text with spaCy to convert it into a Doc object
+        doc = self.nlp(text.lower())
+        # Filter out stop words and punctuation from each sentence
+        return [
+            " ".join(token.text for token in sent if
+                     not token.is_stop and not token.is_punct and token.text not in self.stop_words)
+            for sent in doc.sents
+        ]
+
+    def extract_relevant_phrases(self, filtered_doc_tokens):
+        # TODO make this more better at extracting phrases
+        extracted_phrases = []
+        # Extract noun chunks and named entities from each sentence
+        for doc_token in filtered_doc_tokens:
+            doc_sent = self.nlp(doc_token)
+            for chunk in doc_sent.noun_chunks:
+                # Include the root verb for better context
+                root_verb = [token.lemma_ for token in chunk.root.head.children if token.pos_ == "VERB"]
+                if root_verb:
+                    extracted_phrases.append(chunk.text + " " + root_verb[0])
+                else:
+                    extracted_phrases.append(chunk.text)
+            for ent in doc_sent.ents:
+                extracted_phrases.append(ent.text)
+        return extracted_phrases
+
