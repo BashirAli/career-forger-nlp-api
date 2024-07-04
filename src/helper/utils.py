@@ -1,19 +1,15 @@
 import base64
 import binascii
-import time
-import io
-import json
-from typing import Sequence
-from functools import wraps
 import json
 import re
+from typing import Sequence
+
 from fastapi import Request
 from pydantic_core import ValidationError
 
 from configuration.env import settings
 from configuration.logger_config import logger_config
 from error.custom_exceptions import ManualDLQError, MessageDecodeError, MessageValidationError
-
 from pydantic_model.api_model import ErrorEnum
 from service.logger import CustomLoggerAdapter, configure_logger
 
@@ -125,7 +121,7 @@ def read_json_file(file_path):
         print(f"An unexpected error occurred: {e}")
 
 
-def build_regex(list_of_matches):
+def build_regex_from_list(list_of_matches):
     """
     Regex which builds a pattern based on the following
     Match any character -> match any of the words in the provided list -> match any character

@@ -1,8 +1,6 @@
 import json
-from unittest.mock import Mock, patch
 
 from api.data import gcs_event_data
-
 from configuration.env import settings
 
 TARGET_BLOB_NAME = "test/2024/05/31/test_file.json"

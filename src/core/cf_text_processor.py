@@ -1,12 +1,12 @@
 from helper.utils import read_validate_message_data
+from nlp_analysis import RegexProcessor
 from pydantic_model.api_model import EmailInfo
-from nlp_analysis import RegexTagger
 
 
 class CareerForgerTextProcessor:
     def __init__(self, nlp_analyser):
         self.nlp_analyser = nlp_analyser
-        self.regex_tagger = RegexTagger()
+        self.regex_tagger = RegexProcessor()
 
     def process(self, message):
         # 1. decode and validate pubsub message

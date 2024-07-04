@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
 import pytest
+from gcp.secret import SecretManager
 from google.api_core.exceptions import GoogleAPICallError
 from pydantic import BaseModel
 
 from configuration.env import settings
 from error.custom_exceptions import InternalAPIException
-from gcp.secret import SecretManager
 
 message_id = "12345"
 

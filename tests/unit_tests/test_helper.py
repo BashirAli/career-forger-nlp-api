@@ -1,12 +1,10 @@
 import json
 import os
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 
 from error.custom_exceptions import ManualDLQError, MessageDecodeError
-from pydantic_model.api_model import GcsToPubsubEvent, Message, PubSubMessage
 from helper.utils import (
     format_pydantic_validation_error_message,
     create_pydantic_validation_error_message,
@@ -15,6 +13,7 @@ from helper.utils import (
     read_validate_message_data,
     remove_file_extension
 )
+from pydantic_model.api_model import GcsToPubsubEvent, Message, PubSubMessage
 
 CURRENT_PATH = os.path.dirname(__file__)
 

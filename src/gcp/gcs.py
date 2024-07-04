@@ -1,11 +1,9 @@
-import io
 import logging.config
 
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
 
-from configuration.env import settings
 from configuration.logger_config import logger_config
 from error.custom_exceptions import ManualDLQError, PubsubReprocessError
 from pydantic_model.api_model import ErrorEnum

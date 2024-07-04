@@ -1,11 +1,12 @@
-import spacy
-from configuration.env import settings
-from helper.utils import read_json_file, build_regex
-from collections import defaultdict
-from textblob import TextBlob
-import nltk
-from nltk.corpus import stopwords
 import os
+
+import nltk
+import spacy
+from nltk.corpus import stopwords
+from textblob import TextBlob
+
+from configuration.env import settings
+from helper.utils import read_json_file, build_regex_from_list
 
 CURRENT_PATH = os.path.dirname(__file__)
 categories_file = "data/nlp_regex_categories.json"
@@ -100,10 +101,13 @@ class NLP_Analyser:
         return extracted_phrases  # Return list of extracted relevant phrases
 
 
-class RegexTagger:
+class RegexProcessor:
     def __init__(self):
         self.categories = read_json_file(f"{CURRENT_PATH}/../{categories_file}")
         self.tags = read_json_file(f"{CURRENT_PATH}/../{tags_file}")
+
+    def match_and_redact_pii(self):
+        return ""
 
     def categorise_feedback_phrases(self, extracted_phrases):
         """
@@ -114,7 +118,7 @@ class RegexTagger:
             dict: Dictionary mapping phrases to their categories.
         """
         categorised = {}
-        categories_regex = build_regex(self.categories)
+        categories_regex = build_regex_from_list(self.categories)
 
         for phrase in extracted_phrases:
             matched_category = None
@@ -149,7 +153,7 @@ class RegexTagger:
         Returns:
             dict: Dictionary mapping phrases to their tags.
         """
-        tags_regex = build_regex(self.tags)
+        tags_regex = build_regex_from_list(self.tags)
         # TODO improve this as its not tagging all phrases
 
         return {

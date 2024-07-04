@@ -1,11 +1,10 @@
 import json
 import logging
 import logging.config
-
 from os import path
 from typing import Any
+
 from pythonjsonlogger import jsonlogger
-from fastapi import Request
 
 from configuration.env import settings
 from configuration.logger_config import logger_config

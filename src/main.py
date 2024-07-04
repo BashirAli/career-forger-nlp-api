@@ -1,14 +1,17 @@
 import json
-import pendulum
 from contextlib import asynccontextmanager
 from datetime import datetime
-from fastapi import FastAPI, Request, status, Response, Depends
+from typing import AsyncGenerator
+
+import pendulum
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from typing import AsyncGenerator
 
 from configuration.env import settings
 from configuration.logger_config import logger_config
+from core.cf_text_processor import CareerForgerTextProcessor
+from core.nlp_analysis import NLP_Analyser
 from error.custom_exceptions import (
     ManualDLQError,
     PubsubPublishException,
@@ -16,8 +19,6 @@ from error.custom_exceptions import (
     ModelValidationError,
     InternalAPIException
 )
-from core.cf_text_processor import CareerForgerTextProcessor
-from core.nlp_analysis import NLP_Analyser
 from gcp.pubsub import PubSubPublisher
 from helper.utils import decode_pubsub_message_data, extract_trace_and_request_type, \
     format_pydantic_validation_error_message, create_pydantic_validation_error_message

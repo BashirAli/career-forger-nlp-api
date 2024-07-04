@@ -1,13 +1,12 @@
+import json
 import logging
 
 import pytest
 from fastapi.testclient import TestClient
-import json
-from configuration.env import settings
-from main import app
 from google.cloud import datastore
 
-
+from configuration.env import settings
+from main import app
 from utils.cloud_storage_utils import CloudStorageUtils
 from utils.pubsub_utils import PubSubUtils
 

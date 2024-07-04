@@ -1,11 +1,6 @@
-import json
 import hashlib
 import uuid
 from datetime import datetime
-from error.custom_exceptions import InternalAPIException
-from unittest.mock import Mock, patch
-
-from configuration.env import settings
 
 default_headers = {
     'request-id': 'Test',

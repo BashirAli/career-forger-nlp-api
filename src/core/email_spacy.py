@@ -1,9 +1,8 @@
-import spacy
-from collections import defaultdict
-from textblob import TextBlob
-import nltk
-from nltk.corpus import stopwords
 import re
+
+import nltk
+import spacy
+from nltk.corpus import stopwords
 
 # Download NLTK stop words
 nltk.download('stopwords')

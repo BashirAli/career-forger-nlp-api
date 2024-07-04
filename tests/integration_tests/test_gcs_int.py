@@ -1,10 +1,7 @@
-import datetime
-from unittest.mock import MagicMock, patch
 import json
 
-import pytest
-from conftest import DESTINATION_BLOB_NAME
 from configuration.env import settings
+from conftest import DESTINATION_BLOB_NAME
 
 
 def test_read_from_emulator(gcs_utils, upload_test_file):
