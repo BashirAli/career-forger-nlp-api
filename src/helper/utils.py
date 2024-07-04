@@ -5,6 +5,7 @@ import io
 import json
 from typing import Sequence
 from functools import wraps
+import json
 
 from fastapi import Request
 from pydantic_core import ValidationError
@@ -13,11 +14,11 @@ from configuration.env import settings
 from configuration.logger_config import logger_config
 from error.custom_exceptions import ManualDLQError, MessageDecodeError, MessageValidationError
 
-from gcp.gcs import GoogleCloudStorage
 from pydantic_model.api_model import ErrorEnum
 from service.logger import CustomLoggerAdapter, configure_logger
 
 logger = CustomLoggerAdapter(configure_logger(), None)
+
 
 def format_pydantic_validation_error_message(pydantic_exception: Sequence) -> str:
     exceptions_list = []
@@ -27,7 +28,8 @@ def format_pydantic_validation_error_message(pydantic_exception: Sequence) -> st
         exceptions_list.append({"parameter": parameter, "reason": message})
     return f"The following request parameters failed validation: {str(exceptions_list)}"
 
-def create_pydantic_validation_error_message(pydantic_exception: str) -> str: 
+
+def create_pydantic_validation_error_message(pydantic_exception: str) -> str:
     exceptions_list = []
     pydantic_exception = pydantic_exception.split("\n")
     pydantic_exception.pop(0)
@@ -43,6 +45,7 @@ def create_pydantic_validation_error_message(pydantic_exception: str) -> str:
     return (
         f"The following request parameters failed validation: {exceptions_list}"
     )
+
 
 def decode_pubsub_message_data(data, strict=True) -> str:
     try:
@@ -94,6 +97,7 @@ def read_validate_message_data(request, pydantic_model):
             error_stage=ErrorEnum.MESSAGE_VALIDATION,
         )
 
+
 def extract_trace_and_request_type(original_request: Request) -> dict:
     ctx_required_fields = {}
     # X-Cloud-Trace-Context is for GCP tracing to work
@@ -108,3 +112,14 @@ def extract_trace_and_request_type(original_request: Request) -> dict:
     return ctx_required_fields
 
 
+def read_json_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        print(f"Error: The file at path '{file_path}' was not found.")
+    except json.JSONDecodeError:
+        print(f"Error: The file at path '{file_path}' is not a valid JSON file.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
