@@ -13,9 +13,8 @@ class Settings(BaseSettings):
     is_test_env: Optional[bool] = Field(
         default=False, alias="IS_TEST_ENV"
     )
-    key_secret_id: str = "secret_manager_id"
-    dlq_topic: str = "dlq.topic"
-    datastore_namespace: str = "test_datastore"
+    pubsub_topic: str = "career_forger_analysis.topic"
+    dlq_topic: str = "career_forger_analysis_dlq.topic"
 
 
 settings = Settings()

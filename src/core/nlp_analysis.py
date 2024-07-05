@@ -32,7 +32,7 @@ class NLP_Analyser:
         Method to load spaCy model based on environment (test or production).
         """
         if settings.is_test_env:
-            model_file_path = "../../tests/integration_tests/models/en_core_web_lg"  # Test environment model path
+            model_file_path = "../tests/integration_tests/models/en_core_web_lg"  # Test environment model path
         else:
             # TODO: Load spaCy model from Google Cloud Storage (GCS) bucket
             model_file_path = ""
@@ -130,7 +130,7 @@ class RegexProcessor:
                     break
 
             # If no regex match, analyze sentiment using TextBlob polarity
-            #TODO improve this as sentiment isnt enough
+            # TODO improve this as sentiment isn't enough
             if matched_category is None:
                 polarity = TextBlob(phrase).sentiment.polarity
                 if polarity > 0:

@@ -5,13 +5,13 @@ services:
       context: .
       target: dev
       dockerfile: Dockerfile
-#    dns:
-#      - 100.64.0.1 #/etc/resolv.conf
-#      - #IP ADDRESS HERE
+    dns:
+      - 100.64.0.1 #/etc/resolv.conf
+      - ${IP_ADDRESS}
     container_name: career-forger-nlp-api-dev-local
     environment:
-      - GCP_PROJECT_ID=dummy-project
-      - GOOGLE_CLOUD_PROJECT=dummy-project
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GOOGLE_CLOUD_PROJECT=${GCP_PROJECT_ID}
       - GOOGLE_APPLICATION_CREDENTIALS=/home/appuser/.config/gcloud/application_default_credentials.json
       - PORT=8000
       - PYTHONPATH=/home/appuser/src:/home/appuser/tests

@@ -1,5 +1,7 @@
+import logging
+
 from helper.utils import read_validate_message_data
-from nlp_analysis import RegexProcessor
+from core.nlp_analysis import RegexProcessor
 from pydantic_model.api_model import EmailInfo
 
 
@@ -10,7 +12,7 @@ class CareerForgerTextProcessor:
 
     def process(self, message):
         # 1. decode and validate pubsub message
-        email_data = read_validate_message_data(message, EmailInfo)
+        email_data = read_validate_message_data(message, EmailInfo).model_dump(exclude_none=True)
         raw_email_text = email_data["content"]
 
         # 2. preprocess/clean/tokenize sentences for NLP (removing stopwords)
@@ -30,5 +32,11 @@ class CareerForgerTextProcessor:
 
         # 6. redact PII on certain fields (to be listed)
         redactable_list = ["sender", "recipient", "title"]
+
+        logging.info("REQUEST DUMP")
+        logging.info(email_data)
+
+        logging.info("ENRICHED PHRASES")
+        logging.info(enriched_phrases)
 
         # 7. clean and publish output to pubsub/bq sub

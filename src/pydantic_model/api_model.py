@@ -52,17 +52,28 @@ class Message(BaseModel):
 
 
 x = {
-        'date_sent': 'Thu, 1 Apr 2021 12:00:00 +0000',
-        'sender': 'sender@example.com',
-        'recipient': 'recipient@example.com',
-        'title': 'Test Email',
-        'content_type': 'text/plain',
-        'content': 'This is the body of the email.'
-    }
+    "date_sent": "Thu, 1 Apr 2021 12:00:00 +0000",
+    "sender": "sender@example.com",
+    "recipient": "recipient@example.com",
+    "title": "Test Email",
+    "content_type": "text/plain",
+    "content": "Your technical skills are impressive, especially your proficiency in Python and algorithms. However, "
+               "there is room for improvement in your knowledge of machine learning algorithms and data structures. "
+               "In non-technical aspects, your communication skills are excellent, and you work well in teams. "
+               "However, sometimes you struggle with time management and meeting deadlines, which can affect project "
+               "timelines. You might want to focus on developing your project management skills and improving your "
+               "ability to prioritise tasks effectively. Your involvement in extracurricular activities, such as the "
+               "coding club and volunteering for community projects, is commendable. You showed remarkable leadership "
+               "during the last project, but there were instances where you could have delegated tasks more "
+               "efficiently. For career advice, I suggest you keep honing your public speaking skills and seek "
+               "opportunities for mentorship to further enhance your leadership abilities."
+}
+
+
 class EmailInfo(BaseModel):
-    date_sent: Optional[str] = None
-    sender: Optional[str] = None
-    recipient: Optional[str] = None
-    title: Optional[str] = None
+    date_sent: str = Field(..., description='date sent')
+    sender: str = Field(..., description='email sender')
+    recipient: str = Field(..., description='email reciever')
+    title: str = Field(..., description='email title')
     content_type: Optional[str] = None
-    content: Optional[str] = None
+    content: str= Field(..., description='email content')

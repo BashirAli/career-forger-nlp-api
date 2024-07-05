@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "d3ae4da7-be72-4e71-b9e9-668e8e5fdab6",
+		"name": "Career Forger v1.0 NLP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22334502"
+	},
+	"item": [
+		{
+			"name": "LOCAL NLP POST",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": {\n        \"attributes\": {\n            \"key\": \"value\"\n        },\n        \"data\": {\n            \"date_sent\": \"Thu, 1 Apr 2021 12:00:00 +0000\",\n            \"sender\": \"sender@example.com\",\n            \"recipient\": \"recipient@example.com\",\n            \"title\": \"Test Email\",\n            \"content_type\": \"text/plain\",\n            \"content\": \"Your technical skills are impressive, especially your proficiency in Python and algorithms. However, there is room for improvement in your knowledge of machine learning algorithms and data structures. In non-technical aspects, your communication skills are excellent, and you work well in teams. However, sometimes you struggle with time management and meeting deadlines, which can affect project timelines. You might want to focus on developing your project management skills and improving your ability to prioritise tasks effectively. Your involvement in extracurricular activities, such as the coding club and volunteering for community projects, is commendable. You showed remarkable leadership during the last project, but there were instances where you could have delegated tasks more efficiently. For career advice, I suggest you keep honing your public speaking skills and seek opportunities for mentorship to further enhance your leadership abilities.\"\n        },\n        \"messageId\": \"2070443601311540\",\n        \"message_id\": \"2070443601311540\",\n        \"publishTime\": \"2021-02-26T19:13:55.749Z\",\n        \"publish_time\": \"2021-02-26T19:13:55.749Z\"\n    },\n    \"subscription\": \"projects/myproject/subscriptions/mysubscription\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8003/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8003",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LOCAL NLP DLQ",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": {\n        \"attributes\": {\n            \"key\": \"value\"\n        },\n        \"data\": {\n            \"date_sent\": \"Thu, 1 Apr 2021 12:00:00 +0000\",\n            \"sender\": \"sender@example.com\",\n            \"recipient\": \"recipient@example.com\",\n            \"title\": \"Test Email\",\n            \"content_type\": \"text/plain\",\n            \"content\": \"Your technical skills are impressive, especially your proficiency in Python and algorithms. However, there is room for improvement in your knowledge of machine learning algorithms and data structures. In non-technical aspects, your communication skills are excellent, and you work well in teams. However, sometimes you struggle with time management and meeting deadlines, which can affect project timelines. You might want to focus on developing your project management skills and improving your ability to prioritise tasks effectively. Your involvement in extracurricular activities, such as the coding club and volunteering for community projects, is commendable. You showed remarkable leadership during the last project, but there were instances where you could have delegated tasks more efficiently. For career advice, I suggest you keep honing your public speaking skills and seek opportunities for mentorship to further enhance your leadership abilities.\"\n        },\n        \"messageId\": \"2070443601311540\",\n        \"message_id\": \"2070443601311540\",\n        \"publishTime\": \"2021-02-26T19:13:55.749Z\",\n        \"publish_time\": \"2021-02-26T19:13:55.749Z\"\n    },\n    \"subscription\": \"projects/myproject/subscriptions/mysubscription\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8003/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8003",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

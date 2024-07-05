@@ -28,20 +28,6 @@ services:
         condition: service_started
       cloud-storage:
         condition: service_started
-      datastore:
-        condition: service_healthy  # Wait until Datastore emulator is up and running
-
-  datastore:
-    image: google/cloud-sdk
-    environment:
-      - GCP_PROJECT_ID=dummy-project
-    command: [ "sh", "-c", "gcloud beta emulators datastore start --project=$$GCP_PROJECT_ID --host-port=0.0.0.0:9000 --consistency=1.0 --no-store-on-disk" ]
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000" ]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
 
   cloud-storage:
     build:
