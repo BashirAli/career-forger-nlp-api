@@ -8,6 +8,7 @@ from configuration.logger_config import logger_config
 from error.custom_exceptions import ManualDLQError, PubsubReprocessError
 from pydantic_model.api_model import ErrorEnum
 from service.logger import CustomLoggerAdapter
+import os
 
 logger = CustomLoggerAdapter(logging.getLogger(__name__), None)
 
@@ -21,26 +22,17 @@ class GoogleCloudStorage:
     def _init_client(self, project_id):
         return storage.Client(project_id)
 
-    def read_gcs_file_to_bytes(self, bucket_name, source_blob_name) -> bytes:
-        """Reads a file as bytes from a gcs bucket.
-
-        Arguments:
-            bucket_name: Bucket name where the file resides
-            source_blob_name: Name of the file to read
-
-        Returns:
-            bytes: The file as bytes
-
+    def download_model_from_gcs(self, bucket_name, model_blob_name, local_model_dir):
+        """
+        Download model files from GCS bucket to local directory.
         """
         try:
-            logger.info(msg=f"Reading file from the bucket: {bucket_name}")
-            # Get the bucket
             bucket = self._client.bucket(bucket_name)
-            # Get the blob (file) from the bucket
-            blob = bucket.blob(source_blob_name)
-            # Read the file content as bytes
-            file_as_bytes = blob.download_as_bytes()
-            logger.info(msg=f"Successfully read file from the bucket: {bucket_name}")
+            blobs = bucket.list_blobs(prefix=model_blob_name)
+            for blob in blobs:
+                local_path = os.path.join(local_model_dir, os.path.relpath(blob.name, model_blob_name))
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                blob.download_to_filename(local_path)
 
         except NotFound as e:
             error_value = f"Failed to read file from google cloud storage: {e}"
@@ -59,5 +51,3 @@ class GoogleCloudStorage:
                 error_desc=error_value,
                 error_stage=ErrorEnum.GOOGLE_API_ERROR,
             )
-
-        return file_as_bytes

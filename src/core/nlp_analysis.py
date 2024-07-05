@@ -4,7 +4,7 @@ import nltk
 import spacy
 from nltk.corpus import stopwords
 from textblob import TextBlob
-
+from gcp.gcs import GoogleCloudStorage
 from configuration.env import settings
 from helper.utils import read_json_file, build_regex_from_list
 
@@ -20,6 +20,8 @@ class NLP_Analyser:
         self.excluded_entity_types = (
             'PERSON', 'ORG', 'GPE', 'EMAIL')  # tuple of excluded entity types for privacy purposes
 
+        self.gcs_client = GoogleCloudStorage(settings.gcp_project_id)
+
     def set_nltk_resources(self):
         """
         Method to download NLTK stopwords resource and set up stop words for filtering.
@@ -34,8 +36,16 @@ class NLP_Analyser:
         if settings.is_test_env:
             model_file_path = "../tests/integration_tests/models/en_core_web_lg"  # Test environment model path
         else:
-            # TODO: Load spaCy model from Google Cloud Storage (GCS) bucket
-            model_file_path = ""
+            local_tmp_model_dir = "tmp/en_core_web_lg" # Temporary local path for the model
+
+            # Ensure the local model directory exists
+            if not os.path.exists(local_tmp_model_dir):
+                os.makedirs(local_tmp_model_dir)
+
+            # Download the model files from GCS to the local directory
+            self.gcs_client.download_model_from_gcs(settings.nlp_bucket, settings.nlp_dir_to_model, local_tmp_model_dir)
+
+            model_file_path = local_tmp_model_dir
             # Example: model_file_path = "gs://your-bucket-name/models/en_core_web_lg"
 
         self.nlp = spacy.load(model_file_path)  # Load spaCy model into self.nlp

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     nlp_bucket: str = Field(
         ..., json_schema_extra={"env": "NLP_BUCKET"}
     )
+    nlp_dir_to_model: str = "models/en_core_web_lg"
     is_test_env: Optional[bool] = Field(
         default=False, alias="IS_TEST_ENV"
     )
