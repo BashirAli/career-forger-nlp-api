@@ -18,8 +18,10 @@ class NLP_Analyser:
     def __init__(self):
         self.nlp = None  # Placeholder for spaCy NLP pipeline
         self.stop_words = None  # Placeholder for NLTK stopwords list
-        self.excluded_entity_types = (
+        self.excluded_entity_types_in_txt = (
             'PERSON', 'ORG', 'GPE', 'EMAIL')  # tuple of excluded entity types for privacy purposes
+
+        self.redact_text = '[REDACTED]'
 
         self.gcs_client = GoogleCloudStorage(settings.gcp_project_id)
 
@@ -73,7 +75,7 @@ class NLP_Analyser:
                 token.text for token in sent
                 if not token.is_stop and not token.is_punct
                    and token.text not in self.stop_words
-                   and token.ent_type_ not in self.excluded_entity_types
+                   and token.ent_type_ not in self.excluded_entity_types_in_txt
             ]
             cleaned_sentences.append(" ".join(cleaned_tokens))  # Join cleaned tokens into a sentence
 
@@ -106,7 +108,7 @@ class NLP_Analyser:
             # Extend extracted_phrases with named entities, excluding specific entity types
             extracted_phrases.extend(
                 ent.text for ent in doc_sent.ents
-                if ent.label_ not in self.excluded_entity_types
+                if ent.label_ not in self.excluded_entity_types_in_txt
             )
 
         return extracted_phrases  # Return list of extracted relevant phrases
@@ -134,12 +136,12 @@ class NLP_Analyser:
                 name_parts = ent.text.split()
                 if len(name_parts) > 1:
                     first_name = name_parts[0]
-                    last_name_redacted = ' '.join(['[REDACTED]' for _ in name_parts[1:]])
+                    last_name_redacted = ' '.join([self.redact_text for _ in name_parts[1:]])
                     redacted_text = redacted_text.replace(ent.text, first_name + ' ' + last_name_redacted)
             elif ent.label_ == 'EMAIL':
                 # Redact email address except for domain part
                 local_part, domain_part = ent.text.split('@')
-                redacted_text = redacted_text.replace(local_part, '[REDACTED]')
+                redacted_text = redacted_text.replace(local_part, self.redact_text)
             elif ent.label_ == 'GPE':
                 # Assuming GPE is used for geopolitical entities (like cities and countries)
                 # Keep only city and country if applicable
@@ -151,9 +153,9 @@ class NLP_Analyser:
                 matches = re.findall(mobile_number_pattern, ent.text)
                 for match in matches:
                     if match[0]:  # Check if there is a country code
-                        redacted_text = redacted_text.replace(match[1], '[REDACTED]')
+                        redacted_text = redacted_text.replace(match[1], self.redact_text)
                     else:
-                        redacted_text = redacted_text.replace(ent.text, '[REDACTED]')
+                        redacted_text = redacted_text.replace(ent.text, self.redact_text)
 
         return redacted_text
 
