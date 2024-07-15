@@ -110,6 +110,26 @@ class NLP_Analyser:
 
         return extracted_phrases  # Return list of extracted relevant phrases
 
+    def remove_pii(self, text):
+        """
+        Method to remove PII data such as names, addresses, and emails using spaCy's entity recognition.
+
+        Args:
+        - text (str): Raw text from which PII needs to be removed.
+
+        Returns:
+        - str: Text with PII redacted.
+        """
+        doc = self.nlp(text)  # Process the text with spaCy
+
+        redacted_text = text
+
+        for ent in doc.ents:
+            if ent.label_ in self.excluded_entity_types:
+                redacted_text = redacted_text.replace(ent.text, '[REDACTED]')
+
+        return redacted_text
+
 
 class RegexProcessor:
     def __init__(self):

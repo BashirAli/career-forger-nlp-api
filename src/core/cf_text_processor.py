@@ -22,7 +22,6 @@ class CareerForgerTextProcessor:
         feedback_phrases = self.nlp_analyser.extract_relevant_phrases(preprocessed_text)
 
         # 4. categorise as str/weak/improvements - including categorisation when not matched to regex
-
         categorised_phrases = self.regex_tagger.categorise_feedback_phrases(feedback_phrases)
 
         # 5.  tag with additional info and join
