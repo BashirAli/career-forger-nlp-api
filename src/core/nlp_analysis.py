@@ -1,6 +1,7 @@
 import os
 
 import nltk
+import re
 import spacy
 from nltk.corpus import stopwords
 from textblob import TextBlob
@@ -110,12 +111,12 @@ class NLP_Analyser:
 
         return extracted_phrases  # Return list of extracted relevant phrases
 
-    def remove_pii(self, text):
+    def redact_personal_info_in_text(self, text):
         """
-        Method to remove PII data such as names, addresses, and emails using spaCy's entity recognition.
+        Method to redact PII data such as names, addresses, emails, and mobile numbers using spaCy's entity recognition.
 
         Args:
-        - text (str): Raw text from which PII needs to be removed.
+        - text (str): Raw text from which PII needs to be redacted.
 
         Returns:
         - str: Text with PII redacted.
@@ -124,9 +125,35 @@ class NLP_Analyser:
 
         redacted_text = text
 
+        # Regular expression for mobile numbers (simplified example, may need adjustment)
+        mobile_number_pattern = re.compile(r'\b(\+?\d{1,3})?[-.\s]?(\d{1,4})[-.\s]?(\d{1,4})[-.\s]?(\d{1,9})\b')
+
         for ent in doc.ents:
-            if ent.label_ in self.excluded_entity_types:
-                redacted_text = redacted_text.replace(ent.text, '[REDACTED]')
+            if ent.label_ == 'PERSON':
+                # Split the person's name and redact the last name if applicable
+                name_parts = ent.text.split()
+                if len(name_parts) > 1:
+                    first_name = name_parts[0]
+                    last_name_redacted = ' '.join(['[REDACTED]' for _ in name_parts[1:]])
+                    redacted_text = redacted_text.replace(ent.text, first_name + ' ' + last_name_redacted)
+            elif ent.label_ == 'EMAIL':
+                # Redact email address except for domain part
+                local_part, domain_part = ent.text.split('@')
+                redacted_text = redacted_text.replace(local_part, '[REDACTED]')
+            elif ent.label_ == 'GPE':
+                # Assuming GPE is used for geopolitical entities (like cities and countries)
+                # Keep only city and country if applicable
+                geopolitical_parts = ent.text.split(',')
+                if len(geopolitical_parts) > 1:
+                    redacted_text = redacted_text.replace(ent.text, geopolitical_parts[-1].strip())
+            elif ent.label_ == 'PHONE':
+                # Redact mobile numbers except for the country code
+                matches = re.findall(mobile_number_pattern, ent.text)
+                for match in matches:
+                    if match[0]:  # Check if there is a country code
+                        redacted_text = redacted_text.replace(match[1], '[REDACTED]')
+                    else:
+                        redacted_text = redacted_text.replace(ent.text, '[REDACTED]')
 
         return redacted_text
 
