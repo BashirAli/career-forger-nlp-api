@@ -165,9 +165,6 @@ class RegexProcessor:
         self.categories = read_json_file(f"{CURRENT_PATH}/../{categories_file}")
         self.tags = read_json_file(f"{CURRENT_PATH}/../{tags_file}")
 
-    def match_and_redact_pii(self):
-        return ""
-
     def categorise_feedback_phrases(self, extracted_phrases):
         """
         Categorize feedback phrases based on predefined regex patterns and sentiment analysis.

@@ -7,6 +7,7 @@ from gcp.pubsub import PubSubPublisher
 from configuration.env import settings
 import pendulum
 
+
 class CareerForgerTextProcessor:
     def __init__(self, nlp_analyser):
         self.nlp_analyser = nlp_analyser
@@ -49,5 +50,5 @@ class CareerForgerTextProcessor:
         logging.info(pubsub_data)
 
         # 7. clean and publish output to pubsub/bq sub
-        self._pubsub_client.publish(data=pubsub_data, source_publish_time=str(pendulum.now("Europe/London")))
-
+        self._pubsub_client.publish(data=pubsub_data, source_message_uuid="",
+                                    source_publish_time=str(pendulum.now("Europe/London")))
