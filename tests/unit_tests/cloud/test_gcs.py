@@ -7,8 +7,8 @@ from google.cloud.exceptions import NotFound
 from error.custom_exceptions import ManualDLQError, PubsubReprocessError
 from gcp.gcs import GoogleCloudStorage
 
-bucket_name = "test-bucket"
-source_blob_name = "test_file.json.gpg"
+bucket_name = "dummy_bucket"
+source_blob_name = "test_file.json"
 destination_blob_name = "test_file.json"
 string_data = "string data"
 storage_client_mock = MagicMock()

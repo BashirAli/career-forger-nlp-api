@@ -11,9 +11,8 @@ from helper.utils import (
     decode_pubsub_message_data,
     extract_trace_and_request_type,
     read_validate_message_data,
-    remove_file_extension
 )
-from pydantic_model.api_model import GcsToPubsubEvent, Message, PubSubMessage
+from pydantic_model.api_model import Message, PubSubMessage
 
 CURRENT_PATH = os.path.dirname(__file__)
 
@@ -139,11 +138,11 @@ def test_read_validate_message_data(mock_decode):
         )
     )
 
-    result = read_validate_message_data(mock_request, "")
+    result = read_validate_message_data(mock_request, Message)
 
     # Assert
     mock_decode.assert_called_with(mock_request.message.data)
-    assert result == GcsToPubsubEvent(**example_data)
+    assert result == PubSubMessage(**example_data)
 
 
 def test_read_validate_message_data_json_error():
@@ -172,12 +171,3 @@ def test_extract_trace_and_request_type():
     assert result["requestType"] == mock_request.scope["path"]
 
 
-def test_remove_file_extension():
-    encrypted_file_extension = "dummy.json.gpg"
-    incorrect_file_extension = "dummy.jsongpg"
-    json_file_extension = "dummy.json"
-
-    assert remove_file_extension(encrypted_file_extension, "gpg") == "dummy.json"
-    assert remove_file_extension(encrypted_file_extension, "json") == "dummy.gpg"
-    assert remove_file_extension(incorrect_file_extension, "gpg") == incorrect_file_extension
-    assert remove_file_extension(json_file_extension, "csv") == json_file_extension
