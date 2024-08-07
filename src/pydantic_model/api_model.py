@@ -76,4 +76,4 @@ class EmailInfo(BaseModel):
     recipient: str = Field(..., description='email reciever')
     title: str = Field(..., description='email title')
     content_type: Optional[str] = None
-    content: str= Field(..., description='email content')
+    content: str = Field(..., description='email content')

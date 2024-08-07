@@ -8,7 +8,8 @@ from main import app
 from utils.cloud_storage_utils import CloudStorageUtils
 from utils.pubsub_utils import PubSubUtils
 
-NLP_MODEL_FOLDER_PATH = "/home/appuser/tests/integration_tests/models/"
+NLP_MODEL_FOLDER_PATH = "/home/appuser/tests/integration_tests/models/en_core_web_lg/"
+DESTINATION_FOLDER_PATH = "models/en_core_web_lg/"
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def upload_spacy_model(gcs_utils):
     gcs_utils.upload_entire_folder(
         bucket_name=settings.target_bucket,
         folder_path=NLP_MODEL_FOLDER_PATH,
-        prefix="",
+        prefix=DESTINATION_FOLDER_PATH,
     )
 
     return test_file

@@ -1,75 +1,69 @@
 from datetime import datetime
 
-
 attributes = {
-    "bucketId": "dummy_bucket",
-    "eventTime": "2024-05-31T10:10:10.123431Z",
-    "eventType": "OBJECT_FINALIZE",
-    "notificationConfig": "config",
-    "objectGeneration": "1234",
-    "objectId": f"test/processed/2024/05/31/test_file.json",
-    "payloadFormat": "JSON_API_V1",
+    "bucketId": "dummy_bucket"
 }
 
-
-valid_gcs_event_data = {
+valid_pubsub_eml_event_data = {
     "message": {
         "data": {
-            "kind": "storage_object",
-            "id": "dummy_bucket/test_file.json",
-            "selfLink": "dummy_self_link",
-            "name": f"test/2024/05/31/test_file.json",
-            "bucket": "dummy_bucket",
-            "generation": "1234",
-            "metageneration": "1",
-            "contentType": "text/plain",
-            "timeCreated": str(datetime.now()),
-            "updated": str(datetime.now()),
-            "storageClass": "STANDARD",
-            "timeStorageClassUpdated": str(datetime.now()),
-            "size": "20",
-            "md5Hash": "hash",
-            "mediaLink": "dummy_link",
-            "crc32c": "dummy",
-            "etag": "dummy_etag",
+            "date_sent": "Thu, 1 Apr 2021 12:00:00 +0000",
+            "sender": "sender@example.com",
+            "recipient": "recipient@example.com",
+            "title": "Test Email",
+            "content_type": "text/plain",
+            "content": "Your technical skills are impressive, especially your proficiency in Python and algorithms. However, "
+                       "there is room for improvement in your knowledge of machine learning algorithms and data structures. "
+                       "In non-technical aspects, your communication skills are excellent, and you work well in teams. "
+                       "However, sometimes you struggle with time management and meeting deadlines, which can affect project "
+                       "timelines. You might want to focus on developing your project management skills and improving your "
+                       "ability to prioritise tasks effectively. Your involvement in extracurricular activities, such as the "
+                       "coding club and volunteering for community projects, is commendable. You showed remarkable leadership "
+                       "during the last project, but there were instances where you could have delegated tasks more "
+                       "efficiently. For career advice, I suggest you keep honing your public speaking skills and seek "
+                       "opportunities for mentorship to further enhance your leadership abilities."
         },
         "message_id": "test_message_id",
-        "publish_time": "2024-05-31T10:10:10.012022+01:00",
+        "publish_time": str(datetime.now()),
         "attributes": attributes,
     }
 }
 
-invalid_test_missing_name = {
+valid_response_raw_dict = {
+            "date_sent": "Thu, 1 Apr 2021 12:00:00 +0000",
+            "sender": "sender@example.com",
+            "recipient": "recipient@example.com",
+            "title": "Test Email",
+            "content_type": "text/plain",
+            "content": "Your technical skills are impressive, especially your proficiency in Python and algorithms. However, "
+                       "there is room for improvement in your knowledge of machine learning algorithms and data structures. "
+                       "In non-technical aspects, your communication skills are excellent, and you work well in teams. "
+                       "However, sometimes you struggle with time management and meeting deadlines, which can affect project "
+                       "timelines. You might want to focus on developing your project management skills and improving your "
+                       "ability to prioritise tasks effectively. Your involvement in extracurricular activities, such as the "
+                       "coding club and volunteering for community projects, is commendable. You showed remarkable leadership "
+                       "during the last project, but there were instances where you could have delegated tasks more "
+                       "efficiently. For career advice, I suggest you keep honing your public speaking skills and seek "
+                       "opportunities for mentorship to further enhance your leadership abilities."
+        }
+
+
+invalid_test_missing_fields = {
     "message": {
         "data": {
-            "kind": "storage_object",
-            "id": "dummy_bucket/test_file.json",
-            "selfLink": "dummy_self_link",
-            "bucket": "dummy_bucket",
-            "generation": "1234",
-            "metageneration": "1",
-            "contentType": "text/csv",
-            "timeCreated": str(datetime.now()),
-            "updated": str(datetime.now()),
-            "storageClass": "STANDARD",
-            "timeStorageClassUpdated": str(datetime.now()),
-            "size": "20",
-            "md5Hash": "hash",
-            "mediaLink": "dummy_link",
-            "crc32c": "dummy",
-            "etag": "dummy_etag",
+
         },
         "message_id": "test_message_id",
-        "publish_time": "2024-05-31T10:10:10.012022+01:00",
+        "publish_time": str(datetime.now()),
         "attributes": attributes,
     }
 }
 
-invalid_test_missing_name_bytes = {
+invalid_test_missing_fields_bytes = {
     "message": {
         "data": "ewogICAgICAgICAgICAiYnVja2V0IjogInRlc3Rfdm1faGFzYW4iCiAgICAgICAgfQ==",
         "message_id": "test_message_id",
-        "publish_time": "2024-05-31T10:10:10.012022+01:00",
+        "publish_time": str(datetime.now()),
         "attributes": attributes,
     }
 }
@@ -78,7 +72,7 @@ invalid_test_non_dict_data = {
     "message": {
         "data": [{"a": "b"}],
         "message_id": "test_message_id",
-        "publish_time": "2024-05-31T10:10:10.012022+01:00",
+        "publish_time": str(datetime.now()),
         "attributes": attributes,
     }
 }
@@ -86,10 +80,14 @@ invalid_test_non_dict_data = {
 invalid_test_missing_message_id = {
     "message": {
         "data": {
-            "name": "test/2024/05/31/test_file.json",
-            "bucket": "dummy_bucket",
+            "date_sent": "Thu, 1 Apr 2021 12:00:00 +0000",
+            "sender": "sender@example.com",
+            "recipient": "recipient@example.com",
+            "title": "Test",
+            "content_type": "text/plain",
+            "content": "test"
         },
-        "publish_time": "2024-05-31T10:10:10.012022+01:00",
+        "publish_time": str(datetime.now()),
         "attributes": attributes,
     }
 }
