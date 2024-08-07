@@ -3,12 +3,12 @@ from unittest.mock import Mock, patch
 import spacy
 
 from core.nlp_analysis import NLP_Analyser, RegexProcessor
+from error.custom_exceptions import ManualDLQError
 
 
 @patch('nltk.download')
-@patch('nltk.corpus.stopwords.words')
+@patch('nltk.corpus.stopwords.words', return_value=['a', 'the', 'and'])
 def test_set_nltk_resources(mock_stopwords, mock_download):
-    mock_stopwords.return_value = ['a', 'the', 'and']
     analyser = NLP_Analyser()
     analyser.set_nltk_resources()
 
@@ -17,35 +17,39 @@ def test_set_nltk_resources(mock_stopwords, mock_download):
     mock_stopwords.assert_called_once()
 
 
-@patch('gcp.gcs.GoogleCloudStorage')
 @patch('spacy.load')
-def test_load_spacy_model_test_env(mock_spacy_load, mock_gcs_client):
-    # Mock settings
-    settings = Mock()
-    settings.is_test_env = True
-
-    analyser = NLP_Analyser()
-    analyser.gcs_client = mock_gcs_client
-    analyser.load_spacy_model()
-
-    mock_spacy_load.assert_called_with("../tests/integration_tests/models/en_core_web_lg")
-
-
-@patch('gcp.gcs.GoogleCloudStorage')
-@patch('spacy.load')
-def test_load_spacy_model_production_env(mock_spacy_load, mock_gcs_client):
-    # Mock settings
+@patch('tempfile.TemporaryDirectory', return_value='/mock/temp/dir')
+@patch('os.path.exists', return_value=True)
+def test_load_spacy_model_production_env(mock_exists, mock_tempdir, mock_spacy_load):
     settings = Mock()
     settings.is_test_env = False
     settings.nlp_bucket = 'my-bucket'
     settings.nlp_dir_to_model = 'my-model-dir'
 
+    gcs_client_mock = Mock()
     analyser = NLP_Analyser()
-    analyser.gcs_client = mock_gcs_client
+    analyser.gcs_client = gcs_client_mock
     analyser.load_spacy_model()
 
-    # Ensure the model path was loaded correctly
-    mock_spacy_load.assert_called_once_with("tmp/en_core_web_lg")
+    gcs_client_mock.download_model_from_gcs.assert_called_with(settings.nlp_bucket, settings.nlp_dir_to_model,
+                                                               '/mock/temp/dir')
+    mock_spacy_load.assert_called_once_with('/mock/temp/dir')
+
+
+@patch('spacy.load')
+@patch('os.path.exists', return_value=False)  # Simulate missing meta.json
+def test_load_spacy_model_meta_json_missing(mock_exists, mock_spacy_load):
+    settings = Mock()
+    settings.is_test_env = False
+
+    gcs_client_mock = Mock()
+    analyser = NLP_Analyser()
+    analyser.gcs_client = gcs_client_mock
+
+    with pytest.raises(ManualDLQError) as excinfo:
+        analyser.load_spacy_model()
+
+    assert "meta.json not found when downloading Spacy model to temp dir" in str(excinfo.value)
 
 
 def test_preprocess_raw_text():

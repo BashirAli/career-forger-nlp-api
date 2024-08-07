@@ -1,13 +1,17 @@
 import os
-
+import tempfile
 import nltk
 import re
 import spacy
 from nltk.corpus import stopwords
 from textblob import TextBlob
+from configuration.logger_config import logger_config
+
+from error.custom_exceptions import ManualDLQError
 from gcp.gcs import GoogleCloudStorage
 from configuration.env import settings
 from helper.utils import read_json_file, build_regex_from_list
+from pydantic_model.api_model import ErrorEnum
 
 CURRENT_PATH = os.path.dirname(__file__)
 categories_file = "data/nlp_regex_categories.json"
@@ -39,17 +43,19 @@ class NLP_Analyser:
         if settings.is_test_env:
             model_file_path = "../tests/integration_tests/models/en_core_web_lg"  # Test environment model path
         else:
-            local_tmp_model_dir = "tmp/en_core_web_lg" # Temporary local path for the model
+            with tempfile.TemporaryDirectory() as model_file_path:
+                # Download the entire model folder from GCS to the temporary directory
+                self.gcs_client.download_model_from_gcs(settings.nlp_bucket, settings.nlp_dir_to_model, model_file_path)
 
-            # Ensure the local model directory exists
-            if not os.path.exists(local_tmp_model_dir):
-                os.makedirs(local_tmp_model_dir)
-
-            # Download the model files from GCS to the local directory
-            self.gcs_client.download_model_from_gcs(settings.nlp_bucket, settings.nlp_dir_to_model, local_tmp_model_dir)
-
-            model_file_path = local_tmp_model_dir
-            # Example: model_file_path = "gs://your-bucket-name/models/en_core_web_lg"
+                # Check if meta.json is present
+                meta_path = os.path.join(model_file_path, 'meta.json')
+                if not os.path.exists(meta_path):
+                    error_value = f"meta.json not found when downloading Spacy model to temp dir: {model_file_path}"
+                    raise ManualDLQError(
+                        original_request=logger_config.context.get().get("original_request"),
+                        error_desc=error_value,
+                        error_stage=ErrorEnum.FILE_NOT_FOUND,
+                    )
 
         self.nlp = spacy.load(model_file_path)  # Load spaCy model into self.nlp
 
